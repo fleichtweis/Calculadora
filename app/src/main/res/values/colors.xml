@@ -7,4 +7,15 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Cores customizadas -->
+    <color name="primaria">#3A6EA5</color>
+    <color name="primaria_variacao">#004E98</color>
+    <color name="secundaria">#FA8A3E</color>
+    <color name="secundaria_variacao">#FF6700</color>
+    <color name="background">#EBEBEB</color>
+    <color name="background_variacao">#C0C0C0</color>
+    <color name="amarelo">#ffb703</color>
+    <color name="azul_claro">#8ecae6</color>
+
 </resources>
