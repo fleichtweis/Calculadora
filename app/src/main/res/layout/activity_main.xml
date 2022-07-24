@@ -300,7 +300,7 @@
         android:layout_marginEnd="16dp"
         android:textAlignment="textEnd"
         android:textColor="@color/primaria"
-        android:textSize="16sp"
+        android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

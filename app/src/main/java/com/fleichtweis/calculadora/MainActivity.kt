@@ -2,13 +2,14 @@ package com.fleichtweis.calculadora
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
 
 class MainActivity : AppCompatActivity() {
 
-    //private var display: String = ""
+    private var auxPonto: Boolean = true //Auxiliar para uso do ponto, não permitir usar o ponto mais de uma vez no mesmo número.
 
     private lateinit var textDisplay: TextView
     private lateinit var textHistorico: TextView
@@ -43,6 +44,45 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        iniciarComponentes()
+
+        btnClear.setOnClickListener {
+            val display = textDisplay.text.toString()
+            val tamanhoString = display.length
+
+            if(display.length > 0){
+                //Se true, não é operador, então apaga último caracter.
+                //Senão apaga os três últimos, já que o operador possui um espaço em branco antes e depois do símbolo.
+                if (verificaCaracter()){
+                    if (display.substring(tamanhoString-1, tamanhoString) == "."){
+                        //Seta para reusar o ponto em um novo número
+                        auxPonto = true
+                    }
+                    textDisplay.text = display.substring(0, display.length - 1)
+                } else{
+                    textDisplay.text = display.substring(0, display.length - 3)
+                }
+            }
+        }
+
+        btnClearAll.setOnClickListener {
+            textDisplay.text = ""
+
+            //Seta para reusar o ponto em um novo número
+            auxPonto = true
+        }
+
+        btnIgual.setOnClickListener {
+            calcularExpressao()
+        }
+
+
+        btnAbreParenteses.isEnabled = false
+        btnFechaParenteses.isEnabled = false
+
+    }
+
+    private fun iniciarComponentes() {
         textDisplay = findViewById(R.id.text_display)
         textHistorico = findViewById(R.id.text_historico)
 
@@ -70,35 +110,44 @@ class MainActivity : AppCompatActivity() {
         btn7 = findViewById(R.id.btn_7)
         btn8 = findViewById(R.id.btn_8)
         btn9 = findViewById(R.id.btn_9)
+    }
 
+    private fun calcularExpressao() {
 
-        btnClear.setOnClickListener {
-            val display = textDisplay.text.toString()
+        textHistorico.text = textDisplay.text
 
-            if(display.length > 0){
-                //Se true, não é operador, então apaga último caracter.
-                //Senão apaga os três últimos, já que o operador possui um espaço em branco antes e depois do símbolo.
-                if (verificaCaracter()){
-                    textDisplay.text = display.substring(0, display.length - 1)
-                } else{
-                    textDisplay.text = display.substring(0, display.length - 3)
+        val expressao = textDisplay.text.toString().split(" ")
+        var numero = ""
+        var operador = ""
+        var resultado = 0.0
+
+        for (e in expressao){
+            when(e){
+                "+" -> operador = "+"
+                "-" -> operador = "-"
+                "*" -> operador = "*"
+                "/" -> operador = "/"
+                else -> {
+                    if (numero.isEmpty()) {
+                        numero = e
+                        resultado = numero.toDouble()
+                    } else{
+                        numero = e
+                        when(operador){
+                            "+" -> resultado += numero.toDouble()
+                            "-" -> resultado -= numero.toDouble()
+                            "*" -> resultado *= numero.toDouble()
+                            "/" -> resultado /= numero.toDouble()
+                        }
+                        operador = ""
+                    }
                 }
             }
         }
 
-        btnClearAll.setOnClickListener {
-            textDisplay.text = ""
-        }
-
-        btnIgual.setOnClickListener {
-
-        }
-
-
-
+        textDisplay.text = resultado.toString()
+        auxPonto = false //Resposta sempre vai ter ponto, logo não permite adicionar um ponto logo em seguida.
     }
-
-
 
     //Clique em um dos botões numéricos
     fun btnNumerico(view: View){
@@ -140,6 +189,9 @@ class MainActivity : AppCompatActivity() {
         if (verificaCaracter()){
             val display = textDisplay.text.toString() + " $textoOperacao "
             textDisplay.text = display
+
+            //Seta para reusar o ponto em um novo número
+            auxPonto = true
         }
 
     }
@@ -147,32 +199,39 @@ class MainActivity : AppCompatActivity() {
     //Clique nos botões de ponto, abre e fecha parentesis
     fun btnAuxiliares(view: View){
         var textoAuxiliar: String = ""
-        val display = textDisplay.text
 
-        textoAuxiliar = when(view.id){
-            R.id.btn_ponto -> "."
-            R.id.btn_abre_parenteses -> "("
-            R.id.btn_fecha_parenteses -> ")"
+        when(view.id){
+            //Faz uma validação para permitir somente um ponto por número (Double)
+            R.id.btn_ponto -> {
+                if (auxPonto){
+                    textoAuxiliar = "."
+                    auxPonto = false
+                } else{
+                    textoAuxiliar = ""
+                }
+            }
+            //R.id.btn_abre_parenteses -> "("
+            //R.id.btn_fecha_parenteses -> ")"
             else -> ""
         }
-
-        //Valida o caracter ponto
-        // ##################
-        //ARRUMAR PARA ACEITAR MAIS PONTOS, EM OUTROS NÚMEROS
-        // #################
-        if(textoAuxiliar == "." && display.contains('.')) textoAuxiliar = ""
 
         textDisplay.text = textDisplay.text.toString() + textoAuxiliar
     }
 
     //Se o caracter for diferente de um dos símbolos das operações, retorna true. Senão retorna false.
-    //
     //Verifica o penúltimo caracter, já que após colocar o símbolo de operação é adicionado um espaço em branco.
     private fun verificaCaracter(): Boolean {
         val display = textDisplay.text.toString()
         val tamanhoString = display.length
-        val ultimoCaracter = display.substring(tamanhoString-2, tamanhoString-1)
-        if (ultimoCaracter == "/" || ultimoCaracter == "*" || ultimoCaracter == "-" || ultimoCaracter == "+") return false
+        if (tamanhoString == 0){
+            return false
+        } else if (tamanhoString == 1){
+            val ultimoCaracter = display.substring(tamanhoString-1, tamanhoString)
+            if (ultimoCaracter == "/" || ultimoCaracter == "*" || ultimoCaracter == "-" || ultimoCaracter == "+") return false
+        } else{
+            val ultimoCaracter = display.substring(tamanhoString-2, tamanhoString-1)
+            if (ultimoCaracter == "/" || ultimoCaracter == "*" || ultimoCaracter == "-" || ultimoCaracter == "+") return false
+        }
 
         return true
     }
